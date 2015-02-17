@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Konschti.GitHub.io by konschti</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Konschti.GitHub.io</h1>
+        <p>Submission for Practical Machine Learning</p>
+        <p class="view"><a href="https://github.com/konschti">View the Project on GitHub <small>konschti</small></a></p>
+        <ul>
+          <li class="single"><a href="https://github.com/konschti/konschti.github.io">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>library(caret)<br>
+library(randomForest)<br>
+library(gbm)<br>
+library(plyr)  </p>
+
+<h1>
+<a id="read-the-csv-file-for-training-from-my-working-directory-and-delete-columns-with-nas" class="anchor" href="#read-the-csv-file-for-training-from-my-working-directory-and-delete-columns-with-nas" aria-hidden="true"><span class="octicon octicon-link"></span></a>read the csv file for training from my working directory and delete columns with NAs</h1>
+
+<p>data_tr_original&lt;- read.csv("pml-training.csv", na.strings= c("NA",""," "))<br>
+data_tr_NAs &lt;- apply(data_tr_original, 2, function(x) {sum(is.na(x))})<br>
+data_tr_clean &lt;- data_tr_original[,which(data_tr_NAs == 0)]    </p>
+
+<h1>
+<a id="delete-for-the-prediction-useless-identifier-columns-eg-row-number" class="anchor" href="#delete-for-the-prediction-useless-identifier-columns-eg-row-number" aria-hidden="true"><span class="octicon octicon-link"></span></a>delete for the prediction useless identifier columns eg row number</h1>
+
+<p>data_tr_clean &lt;- data_tr_clean[8:length(data_tr_clean)]   </p>
+
+<h1>
+<a id="divide-the-cleaned-training-data-into-separate-training-and-testing-set" class="anchor" href="#divide-the-cleaned-training-data-into-separate-training-and-testing-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>divide the cleaned training data into separate training and testing set</h1>
+
+<p>inTrain &lt;- createDataPartition(y = data_tr_clean$classe, p = 0.7, list = FALSE)<br>
+training &lt;- data_tr_clean[inTrain, ]<br>
+testing &lt;- data_tr_clean[-inTrain, ]  </p>
+
+<h1>
+<a id="compare-boosting-gbm-and-random-forests-rf-to-cross-validate-feature-selection" class="anchor" href="#compare-boosting-gbm-and-random-forests-rf-to-cross-validate-feature-selection" aria-hidden="true"><span class="octicon octicon-link"></span></a>compare boosting ('gbm'), and random forests (rf) to cross validate feature selection</h1>
+
+<h1>
+<a id="with-cross-validation-to-find-the-best-method" class="anchor" href="#with-cross-validation-to-find-the-best-method" aria-hidden="true"><span class="octicon octicon-link"></span></a>with cross validation to find the best method</h1>
+
+<h1>
+<a id="performing-three-runs-of-a-five-fold-cross-validation" class="anchor" href="#performing-three-runs-of-a-five-fold-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>performing three runs of a five fold cross validation</h1>
+
+<p>fitControl &lt;- trainControl(method = "repeatedcv",number = 5,repeats = 3)</p>
+
+<h1>
+<a id="this-one-takes-quite-a-while-at-least-on-my-laptop" class="anchor" href="#this-one-takes-quite-a-while-at-least-on-my-laptop" aria-hidden="true"><span class="octicon octicon-link"></span></a>this one takes quite a while (at least on my laptop)</h1>
+
+<p>modelgbm &lt;- train(classe ~ .,method='gbm',data = training,trControl=fitControl, verbose=FALSE) 
+modelrf&lt;-train(classe ~ .,method='rf',data = training,trControl=fitControl)</p>
+
+<h1>
+<a id="evaluate-the-model-using-the-remaining-30-of-the-data-as-testing-set" class="anchor" href="#evaluate-the-model-using-the-remaining-30-of-the-data-as-testing-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>evaluate the model using the remaining 30% of the data as testing set</h1>
+
+<p>predictTestinggbm &lt;- predict(modelgbm, testing)<br>
+confusionMatrix(testing$classe, predictTestinggbm) #accuracy 0.9626  </p>
+
+<p>predictTestingrf &lt;- predict(modelrf, testing) 
+confusionMatrix(testing$classe, predictTestingrf) #accuracy 0.992  </p>
+
+<h1>
+<a id="choose-the-better-performing-model-random-forest-in-this-case" class="anchor" href="#choose-the-better-performing-model-random-forest-in-this-case" aria-hidden="true"><span class="octicon octicon-link"></span></a>Choose the better performing model (random forest in this case)</h1>
+
+<h1>
+<a id="on-the-testing-set-for-use-on-the-real-prediction-test-set" class="anchor" href="#on-the-testing-set-for-use-on-the-real-prediction-test-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>on the testing set for use on the real prediction test set</h1>
+
+<h1>
+<a id="load-prediction-test-data-and-apply-the-same-transformation-as-above-for-the-training-data" class="anchor" href="#load-prediction-test-data-and-apply-the-same-transformation-as-above-for-the-training-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>load prediction test data and apply the same transformation as above for the training data</h1>
+
+<p>data_te_original &lt;- read.csv("pml-testing.csv", na.strings= c("NA",""," "))<br>
+data_te_NAs &lt;- apply(data_te_original, 2, function(x) {sum(is.na(x))})<br>
+data_te_clean &lt;- data_te_original[,which(data_te_NAs == 0)]<br>
+data_te_clean &lt;- data_te_clean[8:length(data_te_clean)]  </p>
+
+<h1>
+<a id="prediction-of-the-classes-in-the-real-prediction-test-set" class="anchor" href="#prediction-of-the-classes-in-the-real-prediction-test-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prediction of the classes in the real prediction test set</h1>
+
+<p>predictTest &lt;- predict(modelrf, data_te_clean)</p>
+      </section>
+    </div>
+    <footer>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
